@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>くーちゃんTOEIC</title>
+<meta name="theme-color" content="#FFF5F3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="くーちゃんTOEIC">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+*{-webkit-tap-highlight-color:transparent}
+:root{padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;-webkit-user-select:none;user-select:none}
+[hidden]{display:none!important}
+/* Layout: one phone-width column — header, はなまるカード (week strip), today's task cards, sticky goal bar. Single light look on purpose (milky pink stationery). */
+:root{
+  --ground:#FFF5F3; --card:#FFFFFF; --ink:#4B2E42; --sub:#8E6A80; --faint:#B795A8; --rule:#F1DCE3;
+  --cherry:#E8607F; --cherry-deep:#C9405F; --petal:#F7A8BA; --blush:#FFE9EE; --dash:#E7C3CF;
+  --c-vocab:#FFEDD9; --t-vocab:#A85A22; --c-gram:#EFE4FB; --t-gram:#7046A6; --c-strat:#E1F4EA; --t-strat:#2A7550;
+  --c-read:#E0EEFB; --t-read:#2F5F9B; --c-listen:#FFE3EA; --t-listen:#B53858; --c-test:#FFF2C6; --t-test:#8A6200;
+  --bar:#4B2E42; --bar-sub:#F7C3D0;
+  --f-jp:"Kiwi Maru","Hiragino Maru Gothic ProN","Yu Gothic",serif;
+  --f-num:"Fredoka","Arial Rounded MT Bold",system-ui,sans-serif;
+  color-scheme:light;
+}
+html,body{background:var(--ground);height:100%;overflow:hidden}
+body{color:var(--ink);font-family:var(--f-jp);font-size:15px;line-height:1.55}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--ground)}
+.app{max-width:460px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 0;display:flex;flex-direction:column;gap:10px;height:100%;box-sizing:border-box}
+.top,.kenya,.hana,.th,.note,.foot{flex:none}
+.scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;border-radius:20px}
+button{font:inherit;color:inherit}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.hello{display:flex;flex-direction:column;gap:2px;min-width:0}
+.dayno{font-family:var(--f-num);font-weight:600;font-size:13px;color:var(--cherry-deep);letter-spacing:.06em}
+h1{margin:0;font-size:18px;font-weight:500;letter-spacing:.02em}
+.cheer{font-size:12.5px;color:var(--sub)}
+.count{background:var(--card);border-radius:18px;padding:6px 12px;text-align:center;box-shadow:0 6px 16px rgba(217,70,107,.12);flex:none}
+.count small{display:block;font-size:10px;color:var(--sub)}
+.count b{font-family:var(--f-num);font-size:22px;font-weight:700;color:var(--cherry-deep);line-height:1;font-variant-numeric:tabular-nums}
+.count b i{font-style:normal;font-size:12px;margin-left:2px}
+.kenya{background:var(--blush);border-radius:16px;padding:6px 12px;font-size:12.5px;display:flex;gap:10px;align-items:center}
+.kenya svg{flex:none}
+.hana{background:var(--card);border-radius:22px;padding:8px 8px 6px;display:flex;flex-direction:column;gap:4px;box-shadow:0 8px 20px rgba(217,70,107,.10)}
+.hana-h{display:flex;justify-content:space-between;align-items:center;padding:0 4px;gap:8px}
+.hana-h span{font-size:12px}
+.hana-h .wk{font-family:var(--f-num);color:var(--sub);font-size:12px}
+.nav{display:flex;gap:4px;align-items:center}
+.nav button{width:32px;height:32px;border-radius:50%;border:none;background:var(--blush);color:var(--cherry-deep);cursor:pointer;font-family:var(--f-num);font-size:16px;line-height:1}
+.nav button:disabled{opacity:.35;cursor:default}
+.strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;justify-items:center}
+.dbtn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;padding:2px 0 4px;cursor:pointer;border-radius:12px;min-width:0;width:100%}
+.dbtn .dw{font-size:10px;color:var(--sub)}
+.dbtn.sel{background:var(--blush)}
+.dbtn.sel .dw{color:var(--cherry-deep)}
+.dot{width:36px;height:36px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;box-sizing:border-box;line-height:1.05;font-family:var(--f-num)}
+.dot.fut{border:1.5px dashed var(--dash);color:var(--faint)}
+.dot.past{border:1.5px solid var(--dash);color:var(--faint);background:#FFFAFB}
+.dot.now{border:2px solid var(--cherry);background:var(--blush);color:var(--cherry-deep)}
+.dot b{font-size:14px;font-weight:700}
+.dot small{font-size:8px;font-weight:600;font-family:var(--f-jp)}
+.dot.now small{font-family:var(--f-num)}
+.dbtn:focus-visible,.nav button:focus-visible,.send:focus-visible,.copy:focus-visible,summary:focus-visible{outline:2px solid var(--cherry);outline-offset:2px}
+.pop{animation:pop .5s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{from{transform:scale(.3) rotate(-30deg)}to{transform:scale(1) rotate(0)}}
+.th{display:flex;justify-content:space-between;align-items:center;padding:0 4px;gap:8px}
+.th h2{margin:0;font-size:16px;font-weight:500}
+.segs{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.segs i{width:16px;height:6px;border-radius:3px;background:#F6D3DC}
+.segs i.on{background:var(--cherry)}
+.note{font-size:12px;color:var(--sub);padding:0 4px;margin:-6px 0 0}
+.tasks{display:flex;flex-direction:column;gap:6px;list-style:none;margin:0;padding:0}
+.task{display:flex;gap:10px;align-items:center;border-radius:18px;padding:7px 12px;min-height:46px;box-sizing:border-box;cursor:pointer;transition:opacity .2s}
+.task .tx{flex:1;display:flex;flex-direction:column;min-width:0}
+.task .lb{font-family:var(--f-num);font-size:10px;line-height:1.3;font-weight:600;letter-spacing:.04em}
+.task .mn{font-size:14px;line-height:1.4;overflow-wrap:anywhere}
+.task .sb{font-size:11px;line-height:1.35;opacity:.8}
+.task.done{opacity:.55}
+.task.done .mn{text-decoration:line-through}
+.vocab{background:var(--c-vocab)} .vocab .lb{color:var(--t-vocab)}
+.gram{background:var(--c-gram)} .gram .lb{color:var(--t-gram)}
+.strat{background:var(--c-strat)} .strat .lb{color:var(--t-strat)}
+.read{background:var(--c-read)} .read .lb{color:var(--t-read)}
+.listen{background:var(--c-listen)} .listen .lb{color:var(--t-listen)}
+.test{background:var(--c-test)} .test .lb{color:var(--t-test)}
+.ck{appearance:none;-webkit-appearance:none;width:28px;height:28px;margin:0;border:2px solid #E7B9C6;border-radius:50%;background:#FFFFFF;flex:none;cursor:pointer;transition:background .15s,box-shadow .15s}
+.ck:checked{background:var(--cherry);border-color:var(--cherry);box-shadow:inset 0 0 0 5px #FFFFFF}
+.ck:focus-visible{outline:2px solid var(--cherry);outline-offset:2px}
+.ck:disabled{cursor:default}
+details.more{background:var(--card);border-radius:20px;padding:10px 14px;font-size:13px}
+details.more summary{cursor:pointer;font-weight:500}
+details.more ul{margin:6px 0 2px;padding-left:1.2em}
+.tbl{overflow-x:auto} .tbl table{border-collapse:collapse;width:100%;margin-top:6px;font-size:12px}
+.tbl td,.tbl th{border-bottom:1px solid var(--rule);padding:5px 4px;text-align:left;vertical-align:top}
+.foot{padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+.info{border:none;background:var(--card);color:var(--cherry-deep);border-radius:999px;padding:4px 10px;font-size:11.5px;cursor:pointer;min-height:30px;box-shadow:0 3px 8px rgba(217,70,107,.10)}
+.th-l{display:flex;align-items:center;gap:8px;min-width:0}
+.sheet{position:fixed;inset:0;background:rgba(75,46,66,.35);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+.sheet-b{background:var(--ground);border-radius:24px 24px 0 0;width:100%;max-width:460px;max-height:80%;overflow-y:auto;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));box-sizing:border-box;display:flex;flex-direction:column;gap:10px}
+.sheet-b h3{margin:0;font-size:16px;font-weight:500}
+.sheet-b ul{margin:0;padding-left:1.2em;font-size:13px}
+.close{align-self:flex-end;border:none;background:var(--blush);color:var(--cherry-deep);border-radius:999px;padding:6px 14px;cursor:pointer;min-height:36px}
+.info:focus-visible,.close:focus-visible{outline:2px solid var(--cherry);outline-offset:2px}
+.goalbar{background:var(--bar);color:var(--ground);border-radius:22px;padding:9px 12px 9px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.goalbar .gt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.goalbar .g1{font-size:12px;color:var(--bar-sub)}
+.goalbar .g2{font-size:14px}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.send{display:inline-flex;align-items:center;gap:6px;background:var(--cherry);color:#FFFFFF;border-radius:999px;padding:7px 14px;font-size:13px;text-decoration:none;border:none;cursor:pointer;min-height:36px}
+.copy{background:transparent;border:1px solid var(--bar-sub);color:var(--bar-sub);border-radius:999px;padding:6px 12px;font-size:12px;cursor:pointer;min-height:36px}
+.mode{font-size:10px;color:var(--faint);text-align:center;margin-top:4px}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<body>
+<div class="app">
+  <header class="top">
+    <div class="hello">
+      <div class="dayno" id="dayno">Day 1 / 62</div>
+      <h1>くーちゃんTOEIC</h1>
+      <div class="cheer" id="cheer">今日からスタート！</div>
+    </div>
+    <div class="count"><small>12/19 まで</small><b id="left">62<i>days</i></b></div>
+  </header>
+
+  <div class="kenya" id="kenya" hidden></div>
+
+  <section class="hana" aria-label="はなまるカード">
+    <div class="hana-h">
+      <span>はなまるカード <span class="wk" id="wkinfo"></span></span>
+      <div class="nav"><button type="button" id="prev" aria-label="前の週">‹</button><button type="button" id="next" aria-label="次の週">›</button></div>
+    </div>
+    <div class="strip" id="strip"></div>
+  </section>
+
+  <div class="th"><div class="th-l"><h2 id="dtitle">今日のやること</h2><button type="button" class="info" id="infoBtn">今週のテーマ</button></div><div class="segs" id="segs" aria-hidden="true"></div></div>
+  <p class="note" id="dnote" hidden></p>
+  <div class="scroll"><ul class="tasks" id="tasks"></ul></div>
+
+  <div class="sheet" id="sheet" hidden><div class="sheet-b" role="dialog" aria-modal="true" aria-labelledby="wtitle"><h3 id="wtitle">今週のテーマ</h3><ul id="wgoals"></ul><h3>公式問題集の使い分け</h3>
+    <div class="tbl"><table>
+      <tr><th>教材</th><th>使い方</th><th>時期</th></tr>
+      <tr><td>公式11 TEST1</td><td>Part 3・4 を寝る前のシャドーイング</td><td>毎日</td></tr>
+      <tr><td>公式11 TEST2</td><td>Partごとに時間を測って演習</td><td>7週目</td></tr>
+      <tr><td>公式12 TEST1</td><td>週1回のPart 3・4演習</td><td>1〜4・6週目</td></tr>
+      <tr><td>公式12 TEST2</td><td>Partごとに時間を測って演習</td><td>8週目</td></tr>
+      <tr><td>公式13 TEST1</td><td>2時間通しの模試</td><td>5週目</td></tr>
+      <tr><td>公式13 TEST2</td><td>ラスト模試（温存）</td><td>9週目</td></tr>
+    </table></div>
+    <button type="button" class="close" id="closeBtn">閉じる</button></div></div>
+
+  <div class="foot">
+    <div class="goalbar" id="goalbar"></div>
+    <div class="mode" id="mode"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+const START = new Date(2026, 9, 19);
+const NDAYS = 62;
+const DOW = ["月","火","水","木","金","土","日"];
+const LABEL = {vocab:"VOCAB ・ 金フレ",gram:"GRAMMAR ・ 文法特急",deru:"GRAMMAR ・ 出る1000",strat:"STRATEGY ・ 完全攻略",read:"READING ・ 読解特急",listen:"LISTENING",test:"PRACTICE ・ 演習"};
+const CLS = {vocab:"vocab",gram:"gram",deru:"gram",strat:"strat",read:"read",listen:"listen",test:"test"};
+
+const WEEK_GOALS = [
+  {t:"スタート週", g:["完全攻略・金フレ・文法特急・読解特急をスタート","読解特急は月・水・金・土・日に2題","模試はやるかやらないか自分で決める"]},
+  {t:"1周目を終える", g:["文法特急：1周目を終える","完全攻略：1周目を終えて全体の解き方を理解する","出る1000：開始"]},
+  {t:"2周目に入る", g:["文法特急：2周目","出る1000：25問ずつ＋復習","余裕があれば完全攻略をもう一度"]},
+  {t:"Part 7を固める", g:["文法特急：間違えたところだけ","出る1000：25問ずつ＋復習","読解特急：多めにやり、Part 7の解き方と時間配分を固める"]},
+  {t:"模試週", g:["公式13 TEST1で2時間通しの模試（IPテストなら履歴書にも書ける）","模試の復習をPartごとに"]},
+  {t:"弱点強化", g:["5週目の結果を見て強化メニューを1つ選ぶ","文法 → 出る1000・単語 / 長文 → 読解特急 / リスニング → 演習を増やす"]},
+  {t:"公式11 TEST2", g:["時間を測って解く＋復習（月:Part 1・2 / 水:3 / 金:4 / 土:5・6 / 日:7）","たまに完全攻略とテクニック集に立ち返る"]},
+  {t:"公式12 TEST2", g:["時間を測って解く＋復習（月:Part 1・2 / 水:3 / 金:4 / 土:5・6 / 日:7）","金フレをもう一度全体確認","たまに完全攻略とテクニック集に立ち返る"]},
+  {t:"ラスト模試・本番", g:["公式13 TEST2でラスト模試","復習に時間を使う","前日は単語・文法特急・テクニック集を見るだけ（模試はやらない）"]}
+];
+
+const SH = [];
+for(let q=32;q<=68;q+=3) SH.push("Part 3 Q"+q+"–"+(q+2));
+for(let q=71;q<=98;q+=3) SH.push("Part 4 Q"+q+"–"+(q+2));
+
+function rng(a,b){return "No."+a+"–"+b;}
+// Heavy days: Mon, Wed, Fri, Sat, Sun -> slot 0..4. Tue/Thu are light days.
+const SLOT={0:0,2:1,4:2,5:3,6:4};
+function isLight(d){const w=d%7;return (w===1||w===3);}
+
+function kinfre(d){
+  const w=Math.floor(d/7), s=SLOT[d%7];
+  if(isLight(d)){
+    if(d>=32&&d<49) return "印のついた単語を10分だけ";
+    if(d>=56) return "印のついた単語を10分だけ";
+    return "前日に覚えた範囲をさっと復習（10分）";
+  }
+  if(w<=1){const base=w*200;const a=base+1+s*40,b=a+39;
+    return s===4? rng(a,b)+" を覚える → "+rng(base+1,base+200)+" を総チェック" : rng(a,b)+" を覚える";}
+  if(w===2) return ["600レベル1周テスト No.1–200。できなかった語に印","600レベル1周テスト No.201–400。できなかった語に印","730レベル "+rng(401,450)+" を覚える","730レベル "+rng(451,500)+" を覚える＋前日分の復習","730レベル "+rng(501,550)+" を覚える＋前日分の復習"][s];
+  if(w===3) return ["730レベル前半 No.401–550 を総チェックして完璧に","730レベル "+rng(551,590)+" を覚える","730レベル "+rng(591,630)+" を覚える","730レベル "+rng(631,670)+" を覚える＋前日分の復習","730レベル "+rng(671,700)+" を覚える＋前日分の復習"][s];
+  if(w===4) return ["印のついた単語を5分だけ","730レベル1周テスト No.401–550。できなかった語に印","730レベル1周テスト No.551–700。できなかった語に印","印のついた単語だけを完璧に","印のついた単語だけを完璧に"][s];
+  if(w<7) return "印のついた単語だけを完璧に";
+  if(w===7){const a=1+s*140;return "全体をもう一度確認 "+rng(a,a+139)+"（忘れていた語に印）";}
+  if(d===56) return "印のついた単語を5分だけ";
+  if(d===58) return "再確認で印をつけた単語を完璧に";
+  if(d===60) return "印のついた単語の最終チェック";
+  return "朝、印のついた単語をパラパラ見る";
+}
+
+function gram(d){
+  const m={0:"1周目 第1章",2:"1周目 第2章",4:"1周目 第3章",5:"第1〜3章の間違えた問題を解き直す",
+    7:"1周目 第4章",9:"1周目 第5章",11:"1周目の間違い直し 第1〜3章",12:"1周目の間違い直し 第4〜5章 → 1周目完了",
+    14:"2周目 第1章",16:"2周目 第2章",18:"2周目 第3章",19:"2周目 第4章",20:"2周目 第5章",
+    21:"2周目の間違い直し 第1〜3章",23:"2周目の間違い直し 第4〜5章",25:"間違えたところだけ（第1〜5章の印の問題）",
+    60:"第1〜5章をざっと見直す（間違えた問題中心）"};
+  return m[d]||null;
+}
+
+function kanzen(d){
+  const m={0:"「はじめに」＋Part 1の解き方",2:"Part 2の解き方",4:"Part 3の解き方",5:"Part 4の解き方",6:"Part 1〜4の解き方を見返す",
+    7:"Part 5の解き方",9:"Part 6の解き方",11:"Part 7の解き方（前半）",12:"Part 7の解き方（後半）",13:"全体の解き方を自分用にまとめる → 1周目完了",
+    20:"（余裕があれば）完全攻略をもう一度ざっと見る",
+    44:"完全攻略・テクニック集を見返す（リスニング）",47:"完全攻略・テクニック集を見返す（リーディング）",
+    51:"完全攻略・テクニック集を見返す（リスニング）",54:"完全攻略・テクニック集を見返す（リーディング）",
+    60:"完全攻略のテクニック集を全体見直し"};
+  return m[d]||null;
+}
+
+function deru(d){
+  if(isLight(d)) return null;
+  const s=SLOT[d%7];
+  if(d>=7&&d<14){const a=1+s*14;return "問題 "+a+"–"+(a+13);}
+  if(d>=14&&d<28){const a=71+((d<21?0:5)+s)*25;return "問題 "+a+"–"+(a+24)+"＋前回の間違いを解き直す";}
+  return null;
+}
+
+function reading(d){
+  if(isLight(d)) return null;
+  const dw=d%7;
+  if(d<21) return "2題";
+  if(d<28) return "3題（1題ずつ時間を測り、Part 7の時間配分を固める）";
+  if(d<35) return (dw===2||dw===4||dw===6)?"1題":null;
+  if(d<42) return null;
+  if(d<56) return (dw===0||dw===2||dw===4)?"1題":null;
+  return null;
+}
+
+function plan(d){
+  const it=[]; const add=(id,cat,t,sub)=>it.push({id,cat,t,sub});
+  const dw=d%7, light=isLight(d);
+  if(d===6) add("mock","test","（任意）実力チェック模試","やるかどうかは自分で決める。やらない日はチェック不要");
+  if(d===28){add("mock","test","公式13 TEST1 を2時間通しで解く","IPテストで代用してもOK（履歴書に書ける）");add("score","test","答え合わせ・Partごとの正答数を記録");}
+  if(d>=29&&d<=34&&!light){const r={2:"Part 1〜4",4:"Part 5・6",5:"Part 7"}[dw];
+    if(r) add("rev","test","模試の復習："+r,"間違えた問題の根拠・スクリプトを確認");
+    else add("rev","test","模試の結果を分析して、6週目の強化分野を決める","文法 / 長文 / リスニングのどれが一番弱いか");}
+  if(d>=35&&d<=41&&!light){
+    const s=SLOT[dw]; const a=321+s*25;
+    const lp=["Part 1・2","Part 3","Part 4","Part 3・4（先読みを意識して）","Part 1〜4 総復習"][s];
+    add("w6g","deru","［文法が弱い］出る1000 問題 "+a+"–"+(a+24)+"＋金フレ印の語","選んだメニューだけチェック");
+    add("w6r","read","［長文が弱い］読解特急 2〜3題（時間を測る）","選んだメニューだけチェック");
+    add("w6l","listen","［リスニングが弱い］公式12 TEST1 "+lp+" を解き直し＋スクリプト確認","選んだメニューだけチェック");
+  }
+  if(d>=42&&d<=55&&!light){const book=d<49?"公式11 TEST2":"公式12 TEST2";
+    const P={0:{p:"Part 1・2",n:"31問"},2:{p:"Part 3",n:"39問"},4:{p:"Part 4",n:"30問"},5:{p:"Part 5・6",n:"46問・目標18分"},6:{p:"Part 7",n:"54問・目標54分"}}[dw];
+    add("solve","test",book+" "+P.p+" を時間を測って解く",P.n);
+    add("review","test",P.p+" の復習（間違い・根拠・スクリプト確認）");}
+  if(d===56){add("mock","test","ラスト模試：公式13 TEST2 を2時間通しで解く");add("score","test","答え合わせ・Partごとの正答数を記録");}
+  if(d===58) add("rev","test","ラスト模試の復習：Part 1〜6","間違えた問題の根拠・スクリプトを確認");
+  if(d===59) add("rev","test","ラスト模試の復習：Part 7（間違えた問題だけ・15分）");
+  if(d===61) add("exam","test","TOEIC本番！","持ち物を最終確認して、落ち着いて");
+
+  add("kin","vocab",kinfre(d));
+  const g=gram(d); if(g) add("gram","gram",g);
+  const k=kanzen(d); if(k) add("kanzen","strat",k);
+  const de=deru(d); if(de) add("deru","deru",de);
+  const r=reading(d); if(r) add("read","read",r);
+  const wk={5:"公式12 TEST1 Part 3 Q32–46",12:"公式12 TEST1 Part 3 Q47–61",19:"公式12 TEST1 Part 3 Q62–70・Part 4 Q71–79",26:"公式12 TEST1 Part 4 Q80–100"};
+  if(wk[d]) add("weekly","listen","週1演習："+wk[d],"設問の先読みを練習しながら解く");
+  if(d===60){add("prep","test","持ち物を準備","受験票（写真貼付）・本人確認書類・鉛筆・消しゴム・腕時計");add("sleep","test","早めに寝る（模試はやらない）");}
+  if(d<61) add("shadow","listen","寝る前シャドーイング：公式11 TEST1 "+SH[d%SH.length],"1セットを繰り返す。TEST2には触れない");
+  add("walk","listen",d===61?"会場までの移動でリスニングを聞き流して耳慣らし":"移動時間に公式問題集のリスニングを聞き流す");
+  return it;
+}
+
+
+
+const DAYS=[];
+for(let d=0;d<NDAYS;d++){const dt=new Date(START);dt.setDate(START.getDate()+d);
+  DAYS.push({d,key:fmt(dt),m:dt.getMonth()+1,day:dt.getDate(),dow:d%7,week:Math.floor(d/7),light:isLight(d),items:plan(d)});}
+function fmt(dt){return dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0");}
+window.__PLAN=DAYS;
+if(typeof document==="undefined") return;
+
+// ---------- state ----------
+// ===== 設定：Supabaseを使うときだけ2つを埋める（空のままなら、この端末だけに保存） =====
+const CFG={SUPABASE_URL:"", SUPABASE_KEY:""};
+const KENYA=new URLSearchParams(location.search).has("kenya");
+const remote=!!(CFG.SUPABASE_URL&&CFG.SUPABASE_KEY);
+let done={}; let mode=remote?"db":"local"; let readOnly=KENYA; let isOwner=!KENYA;
+const LS="kuchan-toeic-done-v1";
+if(!KENYA){try{const s=localStorage.getItem(LS); if(s) done=JSON.parse(s)||{};}catch(e){}}
+function persistLocal(){try{localStorage.setItem(LS,JSON.stringify(done));}catch(e){}}
+
+const todayKey=fmt(new Date());
+const todayIdx=DAYS.findIndex(x=>x.key===todayKey);
+const anchorIdx = todayIdx>=0? todayIdx : (todayKey<DAYS[0].key?0:NDAYS-1);
+let selIdx=anchorIdx, selWeek=DAYS[anchorIdx].week;
+let popKey=null;
+
+const $=id=>document.getElementById(id);
+const isDone=(k,id)=>!!(done[k]&&done[k][id]);
+const isW6=day=>day.d>=35&&day.d<=41&&!day.light;
+const core=day=>day.items.filter(i=>!(i.id==="mock"&&day.d===6)&&!i.id.startsWith("w6"));
+function nDone(day){let n=core(day).filter(i=>isDone(day.key,i.id)).length;if(isW6(day)&&["w6g","w6r","w6l"].some(id=>isDone(day.key,id)))n++;return n;}
+const nTotal=day=>core(day).length+(isW6(day)?1:0);
+const complete=day=>nDone(day)>=nTotal(day);
+
+function streakUpTo(idx){let s=0;for(let i=idx;i>=0;i--){if(complete(DAYS[i]))s++;else break;}return s;}
+
+function flower(size,state){
+  const pet = state==="on"
+    ? '<g fill="#F7A8BA"><circle cx="20" cy="6" r="6"/><circle cx="30" cy="10" r="6"/><circle cx="34" cy="20" r="6"/><circle cx="30" cy="30" r="6"/><circle cx="20" cy="34" r="6"/><circle cx="10" cy="30" r="6"/><circle cx="6" cy="20" r="6"/><circle cx="10" cy="10" r="6"/></g><circle cx="20" cy="20" r="12" fill="#E8607F"/><path d="M14.5 20.5l4 4 7-8" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>'
+    : '<g fill="none" stroke="#B48AA2" stroke-width="1.4" stroke-dasharray="2 2"><circle cx="20" cy="6" r="6"/><circle cx="30" cy="10" r="6"/><circle cx="34" cy="20" r="6"/><circle cx="30" cy="30" r="6"/><circle cx="20" cy="34" r="6"/><circle cx="10" cy="30" r="6"/><circle cx="6" cy="20" r="6"/><circle cx="10" cy="10" r="6"/></g><circle cx="20" cy="20" r="11" fill="#5E3B54"/>';
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 40 40" aria-hidden="true">'+pet+'</svg>';
+}
+
+// ---------- render ----------
+function renderTop(){
+  const a=DAYS[anchorIdx];
+  $("dayno").textContent = todayIdx>=0? "Day "+(todayIdx+1)+" / 62" : (todayKey<DAYS[0].key? "10/19 スタート" : "おつかれさま！");
+  const exam=new Date(2026,11,19); const now=new Date(); now.setHours(0,0,0,0);
+  const left=Math.round((exam-now)/86400000);
+  $("left").innerHTML = left>0? left+"<i>days</i>" : left===0? "当日" : "完走";
+  let msg="今日からスタート！";
+  if(todayIdx>0){
+    const y=DAYS[todayIdx-1]; const st=streakUpTo(todayIdx-1);
+    if(a.d===61) msg="本番！いままでの全部が味方だよ";
+    else if(a.d===60) msg="前日は見直しだけ。早く寝よう";
+    else if(st>=3) msg=st+"日連続はなまる！その調子";
+    else if(complete(y)) msg=a.light? "きのうもはなまる。今日はゆる日でOK" : "きのうもはなまる。今日もいこう！";
+    else msg=a.light? "今日はゆる日。10分だけでもOK" : "今日からまた積み上げよう";
+  }
+  if(todayIdx>=0&&complete(DAYS[todayIdx])) msg="今日のはなまる、もらったよ！";
+  $("cheer").textContent=msg;
+}
+
+function renderKenya(){
+  const el=$("kenya");
+  if(isOwner!==false||todayIdx<0){el.hidden=true;return;}
+  const t=DAYS[todayIdx];
+  el.hidden=false;
+  el.innerHTML = complete(t)
+    ? flower(24,"on")+'<span>けにゃへ：くーちゃん、今日のはなまる達成！</span>'
+    : '<span>けにゃへ：くーちゃんは今日 '+nDone(t)+' / '+nTotal(t)+' までがんばり中</span>';
+}
+
+function renderStrip(){
+  const ds=DAYS.filter(x=>x.week===selWeek);
+  const wd=ds.filter(complete).length;
+  $("wkinfo").textContent="Week "+(selWeek+1)+" ・ "+wd+" / "+ds.length;
+  $("prev").disabled=selWeek===0; $("next").disabled=selWeek===8;
+  $("strip").innerHTML=ds.map(day=>{
+    const idx=DAYS.indexOf(day); const c=complete(day);
+    let inner;
+    if(c) inner='<span class="'+(popKey===day.key?'pop':'')+'" style="display:flex">'+flower(36,"on")+'</span>';
+    else if(idx===anchorIdx&&todayIdx>=0) inner='<span class="dot now"><b>'+day.day+'</b><small>'+nDone(day)+'/'+nTotal(day)+'</small></span>';
+    else if(idx<anchorIdx) inner='<span class="dot past"><b>'+day.day+'</b><small>'+nDone(day)+'/'+nTotal(day)+'</small></span>';
+    else inner='<span class="dot fut"><b>'+day.day+'</b>'+(day.d===61?'<small>本番</small>':day.light?'<small>ゆる</small>':'')+'</span>';
+    return '<button type="button" class="dbtn'+(idx===selIdx?' sel':'')+'" data-i="'+idx+'" aria-label="'+day.m+'月'+day.day+'日 '+nDone(day)+'/'+nTotal(day)+'"><span class="dw">'+DOW[day.dow]+'</span>'+inner+'</button>';
+  }).join("");
+}
+
+function renderTasks(){
+  const day=DAYS[selIdx];
+  const isT=selIdx===todayIdx;
+  $("dtitle").textContent = isT? "今日のやること" : day.m+"/"+day.day+"（"+DOW[day.dow]+"）のやること";
+  const tot=nTotal(day), n=nDone(day);
+  $("segs").innerHTML=Array.from({length:tot},(_,i)=>'<i class="'+(i<n?'on':'')+'"></i>').join("");
+  let note="";
+  if(day.light) note="ゆる日：時間がない日なので、これだけでOK";
+  if(isW6(day)) note="強化メニューは5週目に決めた分野を1つだけ選んでチェック";
+  if(day.d===6) note="模試は任意。やらない日はチェックしなくてOK";
+  if(day.d===60) note="本番前日：見直しだけ。模試はやらない";
+  $("dnote").hidden=!note; $("dnote").textContent=note;
+  $("tasks").innerHTML=day.items.map(i=>{
+    const cid="c-"+day.key+"-"+i.id; const on=isDone(day.key,i.id);
+    let lb=LABEL[i.cat];
+    if(i.cat==="listen"){ if(i.id==="shadow") lb="LISTENING ・ 寝る前シャドーイング"; else if(i.id==="walk") lb="LISTENING ・ 移動中"; else if(i.id==="weekly") lb="LISTENING ・ 週1演習"; }
+    const main=i.t.replace(/^寝る前シャドーイング：/,"").replace(/^週1演習：/,"");
+    return '<li><label class="task '+CLS[i.cat]+(on?' done':'')+'" for="'+cid+'"><span class="tx"><span class="lb">'+lb+'</span><span class="mn">'+main+'</span>'+(i.sub?'<span class="sb">'+i.sub+'</span>':'')+'</span><input class="ck" type="checkbox" id="'+cid+'" data-k="'+day.key+'" data-i="'+i.id+'"'+(on?' checked':'')+(readOnly?' disabled':'')+'></label></li>';
+  }).join("");
+  const w=WEEK_GOALS[day.week];
+  $("wtitle").textContent=(day.week+1)+"週目のテーマ：「"+w.t+"」";
+  $("wgoals").innerHTML=w.g.map(x=>'<li>'+x+'</li>').join("");
+}
+
+function lineText(day){return "けにゃへ\nくーちゃん、"+day.m+"/"+day.day+"のTOEIC勉強ぜんぶ終わったよ！今日のはなまるもらった（"+streakUpTo(DAYS.indexOf(day))+"日連続）\n本番まであと"+(61-day.d)+"日"+(remote?"\n"+location.origin+location.pathname+"?kenya":"");}
+
+function renderBar(){
+  const day=DAYS[selIdx]; const left=nTotal(day)-nDone(day);
+  const isT=selIdx===todayIdx;
+  let html;
+  if(complete(day)){
+    const txt=lineText(day);
+    const showSend = isT && isOwner!==false;
+    html='<div class="gt"><span class="g1">'+(isT?"今日のはなまる、ゲット！":day.m+"/"+day.day+" ははなまる")+'</span><span class="g2">'+(showSend?"けにゃに知らせよう":"よくがんばりました")+'</span>'+
+      (showSend?'<div class="acts"><a class="send" href="https://line.me/R/share?text='+encodeURIComponent(txt)+'" target="_blank" rel="noopener">LINEでけにゃに送る</a><button type="button" class="copy" id="copyBtn">文をコピー</button></div>':'')+
+      '</div><span class="'+(popKey===day.key?'pop':'')+'" style="display:flex;flex:none">'+flower(40,"on")+'</span>';
+  } else {
+    html='<div class="gt"><span class="g1">あと'+left+'つで'+(isT?"今日の":day.m+"/"+day.day+"の")+'はなまる</span><span class="g2">もらえたら、けにゃに知らせよう</span></div><span style="display:flex;flex:none">'+flower(40,"off")+'</span>';
+  }
+  $("goalbar").innerHTML=html;
+  const cb=$("copyBtn"); if(cb) cb.addEventListener("click",()=>{
+    const t=lineText(day);
+    try{navigator.clipboard.writeText(t).then(()=>{cb.textContent="コピーしました";},()=>{cb.textContent="コピーできませんでした";});}catch(e){cb.textContent="コピーできませんでした";}
+  });
+}
+
+function renderMode(){
+  $("mode").textContent = KENYA? "けにゃ用の見るだけページ" : mode==="db"? "自動で保存・けにゃのページにも反映" : "この端末に保存中";
+}
+
+
+function renderAll(){renderTop();renderKenya();renderStrip();renderTasks();renderBar();renderMode();popKey=null;}
+
+// ---------- events ----------
+$("infoBtn").addEventListener("click",()=>{$("sheet").hidden=false;$("closeBtn").focus();});
+$("closeBtn").addEventListener("click",()=>{$("sheet").hidden=true;$("infoBtn").focus();});
+$("sheet").addEventListener("click",e=>{if(e.target.id==="sheet"){$("sheet").hidden=true;}});
+$("prev").addEventListener("click",()=>{if(selWeek>0){selWeek--;renderStrip();}});
+$("next").addEventListener("click",()=>{if(selWeek<8){selWeek++;renderStrip();}});
+$("strip").addEventListener("click",e=>{const b=e.target.closest(".dbtn");if(!b)return;selIdx=+b.dataset.i;renderStrip();renderTasks();renderBar();});
+$("tasks").addEventListener("change",e=>{
+  const t=e.target; if(!t.matches(".ck")||readOnly) return;
+  const k=t.dataset.k,id=t.dataset.i; const day=DAYS.find(x=>x.key===k);
+  const before=complete(day);
+  done[k]=Object.assign({},done[k]); if(t.checked) done[k][id]=true; else delete done[k][id];
+  persistLocal();
+  const after=complete(day);
+  if(!before&&after) popKey=k;
+  renderAll();
+  save(k);
+});
+
+// ---------- storage ----------
+async function sb(path,opts){opts=opts||{};
+  const r=await fetch(CFG.SUPABASE_URL.replace(/\/$/,"")+"/rest/v1/"+path,Object.assign({},opts,{headers:Object.assign({apikey:CFG.SUPABASE_KEY,Authorization:"Bearer "+CFG.SUPABASE_KEY,"Content-Type":"application/json"},opts.headers||{})}));
+  if(!r.ok) throw new Error("HTTP "+r.status); return r.status===204||r.status===201?null:r.json();}
+const writing={},pending={};
+function save(k){ if(!remote||KENYA) return; pending[k]=true; if(writing[k]) return; writing[k]=true;
+  (async()=>{ while(pending[k]){ pending[k]=false;
+      try{ await sb("progress",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({day:k,done:done[k]||{},updated_at:new Date().toISOString()})}); }
+      catch(e){ await new Promise(r=>setTimeout(r,3000)); pending[k]=true; if(!navigator.onLine) break; } }
+    writing[k]=false; })();
+}
+async function pull(){ if(!remote) return;
+  try{ const rows=await sb("progress?select=day,done"); const next={};
+    (rows||[]).forEach(r=>{ if(r&&r.done) next[r.day]=r.done; });
+    if(!KENYA) Object.keys(done).forEach(k=>{ if(!next[k]&&Object.keys(done[k]||{}).length){ next[k]=done[k]; save(k);} });
+    done=next; if(!KENYA) persistLocal(); renderAll();
+  }catch(e){} }
+
+renderAll();
+pull();
+if(KENYA) setInterval(pull,60000);
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") pull(); });
+window.addEventListener("online",()=>{ Object.keys(done).forEach(save); });
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+})();
+</script>
+</body>
+</html>
