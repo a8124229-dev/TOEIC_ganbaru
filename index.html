@@ -308,7 +308,7 @@ function plan(d){
   if(wk[d]) add("weekly","listen","週1演習："+wk[d],"設問の先読みを練習しながら解く");
   if(d===60){add("prep","test","持ち物を準備","受験票（写真貼付）・本人確認書類・鉛筆・消しゴム・腕時計");add("sleep","test","早めに寝る（模試はやらない）");}
   if(d<61) add("shadow","listen","寝る前シャドーイング：公式11 TEST1 "+SH[d%SH.length],"1セットを繰り返す。TEST2には触れない");
-  add("walk","listen",d===61?"会場までの移動でリスニングを聞き流して耳慣らし":"移動時間に公式問題集のリスニングを聞き流す");
+  add("walk","listen",d===61?"会場までの移動でリスニングを聞き流して耳慣らし":"移動時間に公式問題集のリスニングを聞き流す","やらなくても、はなまるはもらえます");
   return it;
 }
 
@@ -340,7 +340,7 @@ let popKey=null;
 const $=id=>document.getElementById(id);
 const isDone=(k,id)=>!!(done[k]&&done[k][id]);
 const isW6=day=>day.d>=35&&day.d<=41&&!day.light;
-const core=day=>day.items.filter(i=>!(i.id==="mock"&&day.d===6)&&!i.id.startsWith("w6"));
+const core=day=>day.items.filter(i=>!(i.id==="mock"&&day.d===6)&&!i.id.startsWith("w6")&&i.id!=="walk");
 function nDone(day){let n=core(day).filter(i=>isDone(day.key,i.id)).length;if(isW6(day)&&["w6g","w6r","w6l"].some(id=>isDone(day.key,id)))n++;return n;}
 const nTotal=day=>core(day).length+(isW6(day)?1:0);
 const complete=day=>nDone(day)>=nTotal(day);
@@ -415,7 +415,7 @@ function renderTasks(){
   $("tasks").innerHTML=day.items.map(i=>{
     const cid="c-"+day.key+"-"+i.id; const on=isDone(day.key,i.id);
     let lb=LABEL[i.cat];
-    if(i.cat==="listen"){ if(i.id==="shadow") lb="LISTENING ・ 寝る前シャドーイング"; else if(i.id==="walk") lb="LISTENING ・ 移動中"; else if(i.id==="weekly") lb="LISTENING ・ 週1演習"; }
+    if(i.cat==="listen"){ if(i.id==="shadow") lb="LISTENING ・ 寝る前シャドーイング"; else if(i.id==="walk") lb="LISTENING ・ 移動中（任意）"; else if(i.id==="weekly") lb="LISTENING ・ 週1演習"; }
     const main=i.t.replace(/^寝る前シャドーイング：/,"").replace(/^週1演習：/,"");
     return '<li><label class="task '+CLS[i.cat]+(on?' done':'')+'" for="'+cid+'"><span class="tx"><span class="lb">'+lb+'</span><span class="mn">'+main+'</span>'+(i.sub?'<span class="sb">'+i.sub+'</span>':'')+'</span><input class="ck" type="checkbox" id="'+cid+'" data-k="'+day.key+'" data-i="'+i.id+'"'+(on?' checked':'')+(readOnly?' disabled':'')+'></label></li>';
   }).join("");
