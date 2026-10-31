@@ -198,10 +198,10 @@ const CLS = {vocab:"vocab",gram:"gram",deru:"gram",strat:"strat",read:"read",lis
 
 const WEEK_GOALS = [
   {t:"スタート週", g:["完全攻略・金フレ・文法特急・読解特急をスタート","読解特急は月・水・金・土・日に2題","模試はやるかやらないか自分で決める"]},
-  {t:"1周目を終える", g:["文法特急：1周目を終える","完全攻略：1周目を終えて全体の解き方を理解する","出る1000：第1章 品詞問題をスタート（解き方 → トレーニング → 実戦）"]},
-  {t:"2周目に入る", g:["文法特急：2周目","出る1000：第1章 品詞問題（1日15問）","余裕があれば完全攻略をもう一度"]},
-  {t:"Part 7を固める", g:["文法特急：間違えたところだけ","出る1000：第1章の間違い直し → 第2・3章（1日15問）","読解特急：多めにやり、Part 7の解き方と時間配分を固める"]},
-  {t:"模試週", g:["公式13 TEST1で2時間通しの模試（IPテストなら履歴書にも書ける）","模試の復習をPartごとに","出る1000：第4〜7章（1日15問）"]},
+  {t:"1周目を終える", g:["文法特急：1周目を終える","完全攻略：Part 5まで進める","10/31・11/1で遅れを回収（出る1000は来週から）"]},
+  {t:"2周目に入る", g:["完全攻略：1周目を終える","文法特急：1周目の間違い直し → 2周目","出る1000：第1章スタート（1日15問）","余裕があれば完全攻略をもう一度"]},
+  {t:"Part 7を固める", g:["文法特急：2周目 第4・5章 → 間違い直し","出る1000：第1章を仕上げる","読解特急：多めにやり、Part 7の解き方と時間配分を固める"]},
+  {t:"模試週", g:["公式13 TEST1で2時間通しの模試（IPテストなら履歴書にも書ける）","模試の復習をPartごとに","出る1000：第2〜4章（1日15問）＋第5〜7章の解き方"]},
   {t:"弱点強化", g:["5週目の結果を見て強化メニューを1つ選ぶ","文法 → 出る1000・単語 / 長文 → 読解特急 / リスニング → 演習を増やす"]},
   {t:"公式11 TEST2", g:["時間を測って解く＋復習（月:Part 1・2 / 水:3 / 金:4 / 土:5・6 / 日:7）","たまに完全攻略とテクニック集に立ち返る"]},
   {t:"公式12 TEST2", g:["時間を測って解く＋復習（月:Part 1・2 / 水:3 / 金:4 / 土:5・6 / 日:7）","金フレをもう一度全体確認","たまに完全攻略とテクニック集に立ち返る"]},
@@ -281,10 +281,16 @@ const CU_KIN={9:"No.121–170 を覚える（遅れ分）",11:"No.171–200 を�
 const CU_GRAM={9:"1周目 第4章",11:"1周目 第5章",12:"1周目の間違い直し 第1〜3章",13:"1周目の間違い直し 第4〜5章 → 1周目完了"};
 const CU_KAN={9:"Part 4の解き方（遅れ分）",11:"Part 5の解き方",12:"Part 6の解き方",13:"Part 7の解き方（前半）",14:"Part 7の解き方（後半）",16:"全体の解き方を自分用にまとめる → 1周目完了"};
 const CU_DERU={9:"Part 5の全体像＋第1章 品詞問題の解き方を読む（問題なし）",11:"第1章 トレーニング 15問",12:"第1章 実戦 基礎編 15問（ここから）",13:"第1章 実戦 基礎編 続きから15問",14:"第1章 実戦 基礎編 続きから15問",16:"第1章 実戦 基礎編 続きから15問",18:"第1章 実戦 基礎編 続きから15問",19:"第1章 実戦 応用編 15問（ここから）",20:"第1章 実戦 応用編 続きから15問",21:"第1章で間違えた問題を解き直す → 第1章おわり",23:"第2章 動詞問題：解き方＋トレーニング 15問",25:"第2章 実戦 15問",26:"第3章 前置詞 or 接続詞：解き方＋トレーニング 15問",27:"第3章 実戦 15問",30:"第4章 代名詞：解き方＋15問",32:"第5章 前置詞：解き方＋15問",33:"第6章 関係詞：解き方＋全16問",34:"第7章 ペア表現・語法・数・比較：解き方＋15問"};
-function kinfre(d){return CU_KIN[d]||kinfre0(d);}
-function gram(d){return (d>=9&&d<=13)?(CU_GRAM[d]||null):gram0(d);}
-function kanzen(d){return (d>=9&&d<=16)?(CU_KAN[d]||null):kanzen0(d);}
-function deru(d){return (d>=9&&d<=34)?(CU_DERU[d]||null):deru0(d);}
+// ---- 10/31 組み直し（10/26〜10/30の分を回収）----
+const R_KIN={12:null,13:"No.171–200 を覚える → No.1–200 をざっとチェック",14:"No.241–290 を覚える",16:"No.291–340 を覚える",18:"No.341–400 を覚える → No.201–400 をざっとチェック",19:"600レベル1周テスト No.1–200。できなかった語に印",20:"600レベル1周テスト No.201–400。できなかった語に印",21:"730レベル No.401–450 を覚える",23:"730レベル No.451–500 を覚える",25:"730レベル No.501–550 を覚える",26:"730レベル No.551–600 を覚える",27:"730レベル No.601–650 を覚える"};
+const R_GRAM={12:"1周目 第4章",13:"1周目 第5章 → 1周目完了（間違い直しは来週）",14:"1周目の間違い直し 第1〜3章",16:"1周目の間違い直し 第4〜5章",18:"2周目 第1章",19:"2周目 第2章",20:"2周目 第3章",21:"2周目 第4章",23:"2周目 第5章",25:"2周目の間違い直し（印の問題だけ）"};
+const R_KAN={12:"Part 4の解き方",13:"Part 5の解き方",14:"Part 6の解き方",16:"Part 7の解き方（前半）",18:"Part 7の解き方（後半）",19:"全体の解き方を自分用にまとめる → 1周目完了"};
+const R_DERU={14:"Part 5の全体像＋第1章 品詞問題の解き方を読む（問題なし）",16:"第1章 トレーニング 15問",18:"第1章 実戦 基礎編 15問（ここから）",19:"第1章 実戦 基礎編 続きから15問",20:"第1章 実戦 基礎編 続きから15問",21:"第1章 実戦 基礎編 続きから15問",23:"第1章 実戦 基礎編 続きから15問",25:"第1章 実戦 応用編 15問（ここから）",26:"第1章 実戦 応用編 続きから15問",27:"第1章で間違えた問題を解き直す → 第1章おわり",30:"第2章 動詞：解き方＋15問",32:"第3章 前置詞 or 接続詞：解き方＋15問",33:"第4章 代名詞：解き方＋15問",34:"第5〜7章の「解き方」だけ読む"};
+const MOVED={7:1,8:1,9:1,10:1,11:1};
+function kinfre(d){if(d in R_KIN) return R_KIN[d]; return CU_KIN[d]||kinfre0(d);}
+function gram(d){if(d>=12&&d<=34) return R_GRAM[d]||null; return (d>=9&&d<=13)?(CU_GRAM[d]||null):gram0(d);}
+function kanzen(d){if(d>=12&&d<=20) return R_KAN[d]||null; return (d>=9&&d<=16)?(CU_KAN[d]||null):kanzen0(d);}
+function deru(d){if(d>=12&&d<=34) return R_DERU[d]||null; return (d>=9&&d<=34)?(CU_DERU[d]||null):deru0(d);}
 
 function plan(d){
   const it=[]; const add=(id,cat,t,sub)=>it.push({id,cat,t,sub});
@@ -311,15 +317,15 @@ function plan(d){
   if(d===59) add("rev","test","ラスト模試の復習：Part 7（間違えた問題だけ・15分）");
   if(d===61) add("exam","test","TOEIC本番！","持ち物を最終確認して、落ち着いて");
 
-  add("kin","vocab",kinfre(d));
+  const kt=kinfre(d); if(kt) add("kin","vocab",kt);
   const g=gram(d); if(g) add("gram","gram",g);
   const k=kanzen(d); if(k) add("kanzen","strat",k);
   const de=deru(d); if(de) add("deru","deru",de);
-  const r=reading(d); if(r) add("read","read",r);
-  const wk={5:"公式12 TEST1 Part 3 Q32–46",12:"公式12 TEST1 Part 3 Q47–61",19:"公式12 TEST1 Part 3 Q62–70・Part 4 Q71–79",26:"公式12 TEST1 Part 4 Q80–100"};
+  const r=d===12?null:reading(d); if(r) add("read","read",r);
+  const wk={5:"公式12 TEST1 Part 3 Q32–46",19:"公式12 TEST1 Part 3 Q62–70・Part 4 Q71–79",26:"公式12 TEST1 Part 4 Q80–100"};
   if(wk[d]) add("weekly","listen","週1演習："+wk[d],"設問の先読みを練習しながら解く");
   if(d===60){add("prep","test","持ち物を準備","受験票（写真貼付）・本人確認書類・鉛筆・消しゴム・腕時計");add("sleep","test","早めに寝る（模試はやらない）");}
-  if(d<61) add("shadow","listen","寝る前シャドーイング：公式11 TEST1 "+SH[(d>=8?d-4:d)%SH.length],"1セットを繰り返す。TEST2には触れない");
+  if(d<61) add("shadow","listen",d>=12?"寝る前シャドーイング：公式11 TEST1 Part 3・4 の続きの1セット":"寝る前シャドーイング：公式11 TEST1 "+SH[(d>=8?d-4:d)%SH.length],d>=12?"前回やったセットの次から。1セットを繰り返す。TEST2には触れない":"1セットを繰り返す。TEST2には触れない");
   add("walk","listen",d===61?"会場までの移動でリスニングを聞き流して耳慣らし":"移動時間に公式問題集のリスニングを聞き流す","やらなくても、はなまるはもらえます");
   return it;
 }
@@ -406,7 +412,7 @@ function renderStrip(){
     let inner;
     if(c) inner='<span class="'+(popKey===day.key?'pop':'')+'" style="display:flex">'+flower(36,"on")+'</span>';
     else if(idx===anchorIdx&&todayIdx>=0) inner='<span class="dot now"><b>'+day.day+'</b><small>'+nDone(day)+'/'+nTotal(day)+'</small></span>';
-    else if(idx<anchorIdx) inner='<span class="dot past"><b>'+day.day+'</b><small>'+nDone(day)+'/'+nTotal(day)+'</small></span>';
+    else if(idx<anchorIdx) inner='<span class="dot past"><b>'+day.day+'</b><small>'+(MOVED[day.d]?'振替':nDone(day)+'/'+nTotal(day))+'</small></span>';
     else inner='<span class="dot fut"><b>'+day.day+'</b>'+(day.d===61?'<small>本番</small>':day.light?'<small>ゆる</small>':'')+'</span>';
     return '<button type="button" class="dbtn'+(idx===selIdx?' sel':'')+'" data-i="'+idx+'" aria-label="'+day.m+'月'+day.day+'日 '+nDone(day)+'/'+nTotal(day)+'"><span class="dw">'+DOW[day.dow]+'</span>'+inner+'</button>';
   }).join("");
@@ -423,6 +429,8 @@ function renderTasks(){
   if(isW6(day)) note="強化メニューは5週目に決めた分野を1つだけ選んでチェック";
   if(day.d===6) note="模試は任意。やらない日はチェックしなくてOK";
   if(day.d===60) note="本番前日：見直しだけ。模試はやらない";
+  if(MOVED[day.d]&&!complete(day)) note="この日の残りは先の日に移しました。チェックしなくてOK";
+  if(day.d===12) note="組み直し初日：今夜はこれだけでOK";
   $("dnote").hidden=!note; $("dnote").textContent=note;
   $("tasks").innerHTML=day.items.map(i=>{
     const cid="c-"+day.key+"-"+i.id; const on=isDone(day.key,i.id);
