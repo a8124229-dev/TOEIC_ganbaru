@@ -143,6 +143,17 @@ details.more ul{margin:6px 0 2px;padding-left:1.2em}
 @keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion: reduce){.cele *{animation-duration:.01s!important;animation-delay:0s!important}}
 @media (prefers-reduced-motion: reduce){.app *{animation:none!important;transition:none!important}}
+.cheer.warn{color:var(--cherry-deep);font-weight:500}
+.task.fut{opacity:.75;cursor:default}
+.more-row{display:flex;flex-direction:column;gap:6px;padding:6px 4px 2px}
+.more-t{font-size:11.5px;color:var(--sub)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1.5px dashed var(--petal);background:var(--card);color:var(--cherry-deep);border-radius:999px;padding:6px 12px;font-size:12.5px;cursor:pointer;min-height:36px;font-family:var(--f-jp)}
+.chip:focus-visible{outline:2px solid var(--cherry);outline-offset:2px}
+ul.pace{list-style:none;padding:0!important;margin:0;display:flex;flex-direction:column;gap:8px;font-size:12.5px}
+ul.pace li{background:var(--card);border-radius:14px;padding:8px 12px}
+ul.pace .ok{color:var(--t-strat)} ul.pace .ng{color:var(--cherry-deep);font-weight:500}
+ul.pace .nx{color:var(--sub);font-size:11.5px;margin-top:2px}
 </style>
 
 <body>
@@ -170,7 +181,7 @@ details.more ul{margin:6px 0 2px;padding-left:1.2em}
   <p class="note" id="dnote" hidden></p>
   <div class="scroll"><ul class="tasks" id="tasks"></ul></div>
 
-  <div class="sheet" id="sheet" hidden><div class="sheet-b" role="dialog" aria-modal="true" aria-labelledby="wtitle"><h3 id="wtitle">今週のテーマ</h3><ul id="wgoals"></ul><h3>公式問題集の使い分け</h3>
+  <div class="sheet" id="sheet" hidden><div class="sheet-b" role="dialog" aria-modal="true" aria-labelledby="wtitle"><h3>進み具合</h3><ul class="pace" id="pace"></ul><h3 id="wtitle">今週のテーマ</h3><ul id="wgoals"></ul><h3>公式問題集の使い分け</h3>
     <div class="tbl"><table>
       <tr><th>教材</th><th>使い方</th><th>時期</th></tr>
       <tr><td>公式11 TEST1</td><td>Part 3・4 を寝る前のシャドーイング</td><td>毎日</td></tr>
@@ -292,7 +303,7 @@ function gram(d){if(d>=12&&d<=34) return R_GRAM[d]||null; return (d>=9&&d<=13)?(
 function kanzen(d){if(d>=12&&d<=20) return R_KAN[d]||null; return (d>=9&&d<=16)?(CU_KAN[d]||null):kanzen0(d);}
 function deru(d){if(d>=12&&d<=34) return R_DERU[d]||null; return (d>=9&&d<=34)?(CU_DERU[d]||null):deru0(d);}
 
-function plan(d){
+function oldPlan(d){
   const it=[]; const add=(id,cat,t,sub)=>it.push({id,cat,t,sub});
   const dw=d%7, light=isLight(d);
   if(d===6) add("mock","test","（任意）実力チェック模試","やるかどうかは自分で決める。やらない日はチェック不要");
@@ -332,11 +343,73 @@ function plan(d){
 
 
 
+
+// ===== 11/8〜 繰り越し式 =====
+const NEW_FROM = 20; // 2026-11-08 からは「次にやるところ」方式
+const Q = {
+  kin: {label:"金フレ", cat:"vocab", deadline:53, short:"金フレ", units:[
+    "No.241–280 を覚える","No.281–320 を覚える","No.321–360 を覚える","No.361–400 を覚える → No.201–400 をざっとチェック",
+    "600レベル1周テスト No.1–200。できなかった語に印","600レベル1周テスト No.201–400。できなかった語に印",
+    "730レベル No.401–440 を覚える","730レベル No.441–480 を覚える","730レベル No.481–520 を覚える","730レベル No.521–560 を覚える",
+    "730レベル No.561–600 を覚える","730レベル No.601–640 を覚える","730レベル No.641–680 を覚える","730レベル No.681–700 を覚える → No.401–700 をざっとチェック",
+    "730レベル1周テスト No.401–550。できなかった語に印","730レベル1周テスト No.551–700。できなかった語に印"]},
+  kanzen: {label:"完全攻略", cat:"strat", deadline:27, short:"完全攻略", units:[
+    "Part 5の解き方","Part 6の解き方","Part 7の解き方（前半）","Part 7の解き方（後半）","全体の解き方を自分用にまとめる → 1周目完了"]},
+  gram: {label:"文法特急", cat:"gram", deadline:48, short:"文法特急", units:[
+    "1周目 第5章 → 1周目完了","1周目の間違い直し 第1〜3章","1周目の間違い直し 第4〜5章",
+    "2周目 第1章","2周目 第2章","2周目 第3章","2周目 第4章","2周目 第5章","2周目の間違い直し（印の問題だけ）"]},
+  deru: {label:"出る1000", cat:"deru", deadline:55, short:"出る1000", units:[
+    "Part 5の全体像＋第1章 品詞問題の解き方を読む（問題なし）","第1章 トレーニング 15問","第1章 実戦 基礎編 15問（ここから）",
+    "第1章 実戦 基礎編 続きから15問","第1章 実戦 基礎編 続きから15問","第1章 実戦 基礎編 続きから15問",
+    "第1章 実戦 応用編 15問（ここから）","第1章 実戦 応用編 続きから15問","第1章で間違えた問題を解き直す → 第1章おわり",
+    "第2章 動詞：解き方＋15問","第3章 前置詞 or 接続詞：解き方＋15問","第4章 代名詞：解き方＋15問","第5〜7章の「解き方」だけ読む"]}
+};
+const PRIO = ["kanzen","gram","deru"];   // 金フレ以外は、この順で先に終わらせたいものから
+const NOQ = {28:1,56:1,60:1,61:1};      // 模試・前日・本番は「次にやるところ」を出さない
+const FIXED_SKIP = {kin:1,gram:1,kanzen:1,deru:1,read:1,shadow:1,walk:1};
+
+function fixedItems(d){
+  // 日付で決まっている予定（模試・演習・週1・6週目の強化など）だけを旧プランから取り出す
+  const out=[];
+  oldPlan(d).forEach(i=>{
+    if(!FIXED_SKIP[i.id]) out.push(i);
+    else if(i.id==="kanzen"&&d>=44) out.push(i);
+    else if(i.id==="gram"&&d===60) out.push(i);
+  });
+  return out;
+}
+function hasTest(items){return items.some(i=>i.cat==="test");}
+
+// 1日分のやることを組み立てる（prog は教材ごとの「次の番号」。シミュレーション時は進める）
+function buildDay(d, prog, advance){
+  const items=[]; const add=(o)=>items.push(o);
+  const fx=fixedItems(d); const light=isLight(d);
+  fx.filter(i=>i.cat==="test").forEach(add);
+  const kinLeft = prog.kin < Q.kin.units.length;
+  if(NOQ[d]){
+    const k=oldPlan(d).find(i=>i.id==="kin"); if(k) add({id:"kinrev",cat:"vocab",t:k.t});
+  } else if(light){
+    add({id:"kinrev",cat:"vocab",t: kinLeft? "前回覚えた範囲をさっと復習（10分）" : "印のついた単語を10分だけ"});
+  } else {
+    const qs=[];
+    if(kinLeft) qs.push("kin"); else add({id:"kinrev",cat:"vocab",t:"印のついた単語だけを完璧に"});
+    const n = hasTest(fx)? 1 : 2;
+    PRIO.filter(q=>prog[q]<Q[q].units.length).slice(0,n).forEach(q=>qs.push(q));
+    qs.forEach(q=>{ const u=prog[q]; add({id:"q:"+q+":"+u,q,u,cat:Q[q].cat,t:Q[q].units[u]}); if(advance) prog[q]=u+1; });
+  }
+  fx.filter(i=>i.cat!=="test").forEach(add);
+  if(!NOQ[d]&&!light){ const r = d<28? "1〜2題" : reading(d); if(r) add({id:"read",cat:"read",t:r}); }
+  if(d<61) add({id:"shadow",cat:"listen",t:"寝る前シャドーイング：公式11 TEST1 Part 3・4 の続きの1セット",sub:"前回やったセットの次から。1セットを繰り返す"});
+  add({id:"walk",cat:"listen",t:d===61?"会場までの移動でリスニングを聞き流して耳慣らし":"移動時間に公式問題集のリスニングを聞き流す",sub:"やらなくても、はなまるはもらえます"});
+  return items;
+}
+
+
+function fmt(dt){return dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0");}
 const DAYS=[];
 for(let d=0;d<NDAYS;d++){const dt=new Date(START);dt.setDate(START.getDate()+d);
-  DAYS.push({d,key:fmt(dt),m:dt.getMonth()+1,day:dt.getDate(),dow:d%7,week:Math.floor(d/7),light:isLight(d),items:plan(d)});}
-function fmt(dt){return dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0");}
-window.__PLAN=DAYS;
+  DAYS.push({d,key:fmt(dt),m:dt.getMonth()+1,day:dt.getDate(),dow:d%7,week:Math.floor(d/7),light:isLight(d)});}
+window.__DAYS=DAYS; window.__buildDay=buildDay; window.__Q=Q;
 if(typeof document==="undefined") return;
 
 // ---------- state ----------
@@ -344,25 +417,67 @@ if(typeof document==="undefined") return;
 const CFG={SUPABASE_URL:"", SUPABASE_KEY:""};
 const KENYA=new URLSearchParams(location.search).has("kenya");
 const remote=!!(CFG.SUPABASE_URL&&CFG.SUPABASE_KEY);
-let done={}; let mode=remote?"db":"local"; let readOnly=KENYA; let isOwner=!KENYA;
-const LS="kuchan-toeic-done-v1";
-if(!KENYA){try{const s=localStorage.getItem(LS); if(s) done=JSON.parse(s)||{};}catch(e){}}
-function persistLocal(){try{localStorage.setItem(LS,JSON.stringify(done));}catch(e){}}
+const readOnly=KENYA, isOwner=!KENYA;
+const LS_OLD="kuchan-toeic-done-v1", LS="kuchan-toeic-v2";
+let S={old:{}, qdone:{kin:{},kanzen:{},gram:{},deru:{}}, ddone:{}, snap:{}};
+function loadLocal(){
+  try{const o=localStorage.getItem(LS_OLD); if(o) S.old=JSON.parse(o)||{};}catch(e){}
+  try{const s=localStorage.getItem(LS); if(s){const v=JSON.parse(s); if(v&&v.qdone) S=Object.assign(S,v);}}catch(e){}
+  Object.keys(Q).forEach(q=>{ if(!S.qdone[q]) S.qdone[q]={}; });
+}
+if(!KENYA) loadLocal();
+function persist(){ if(KENYA) return; try{localStorage.setItem(LS,JSON.stringify(S));}catch(e){} save(); }
 
 const todayKey=fmt(new Date());
 const todayIdx=DAYS.findIndex(x=>x.key===todayKey);
 const anchorIdx = todayIdx>=0? todayIdx : (todayKey<DAYS[0].key?0:NDAYS-1);
-let selIdx=anchorIdx, selWeek=DAYS[anchorIdx].week;
-let popKey=null;
-
+let selIdx=anchorIdx, selWeek=DAYS[anchorIdx].week, popKey=null;
 const $=id=>document.getElementById(id);
-const isDone=(k,id)=>!!(done[k]&&done[k][id]);
-const isW6=day=>day.d>=35&&day.d<=41&&!day.light;
-const core=day=>day.items.filter(i=>!(i.id==="mock"&&day.d===6)&&!i.id.startsWith("w6")&&i.id!=="walk"&&!i.id.startsWith("opt"));
-function nDone(day){let n=core(day).filter(i=>isDone(day.key,i.id)).length;if(isW6(day)&&["w6g","w6r","w6l"].some(id=>isDone(day.key,id)))n++;return n;}
-const nTotal=day=>core(day).length+(isW6(day)?1:0);
-const complete=day=>nDone(day)>=nTotal(day);
 
+function prog(){ const p={}; Object.keys(Q).forEach(q=>{let u=0; while(S.qdone[q][u]) u++; p[q]=u;}); return p; }
+
+// 今日の分は、開いた時点の「次にやるところ」で決めて保存する（できなかった分は次の日にまた出る）
+function ensureToday(){
+  if(KENYA||todayIdx<NEW_FROM||S.snap[todayKey]) return;
+  const items=buildDay(todayIdx, prog(), false);
+  const seen={}; Object.keys(S.snap).forEach(k=>{ if(k<todayKey) S.snap[k].forEach(i=>{ if(i.q) seen[i.id]=k; }); });
+  items.forEach(i=>{ if(i.q&&seen[i.id]){ const p=seen[i.id].split("-"); i.carried=(+p[1])+"/"+(+p[2]); } });
+  S.snap[todayKey]=items; persist();
+}
+
+// 未来の日は「毎日予定どおりやった場合」の見込みで表示
+let PREVIEW={};
+function computePreview(){
+  PREVIEW={}; const p=prog();
+  if(todayIdx>=0&&S.snap[todayKey]) S.snap[todayKey].forEach(i=>{ if(i.q) p[i.q]=Math.max(p[i.q],i.u+1); });
+  const from = Math.max(NEW_FROM, todayIdx>=0? todayIdx+1 : (todayKey<DAYS[0].key? NEW_FROM : NDAYS));
+  const finish={};
+  for(let d=from; d<NDAYS; d++){
+    PREVIEW[DAYS[d].key]=buildDay(d,p,true);
+    Object.keys(Q).forEach(q=>{ if(!finish[q]&&p[q]>=Q[q].units.length) finish[q]=d; });
+  }
+  Object.keys(Q).forEach(q=>{ if(!finish[q]&&p[q]>=Q[q].units.length) finish[q]=from-1; });
+  return finish;
+}
+let FINISH={};
+
+function itemsOf(day){
+  if(day.d<NEW_FROM) return oldPlan(day.d);
+  if(S.snap[day.key]) return S.snap[day.key];
+  if(PREVIEW[day.key]) return PREVIEW[day.key];
+  return [];
+}
+const isFuture=day=>day.key>todayKey;
+function isDoneOn(day,i){
+  if(day.d<NEW_FROM) return !!(S.old[day.key]&&S.old[day.key][i.id]);
+  if(i.q){ const k=S.qdone[i.q][i.u]; return !!k && k<=day.key; }
+  return !!(S.ddone[day.key]&&S.ddone[day.key][i.id]);
+}
+const isW6=day=>day.d>=35&&day.d<=41&&!day.light;
+const core=day=>itemsOf(day).filter(i=>!(i.id==="mock"&&day.d===6)&&!String(i.id).startsWith("w6")&&i.id!=="walk"&&!String(i.id).startsWith("opt"));
+function nDone(day){let n=core(day).filter(i=>isDoneOn(day,i)).length; if(isW6(day)&&itemsOf(day).some(i=>String(i.id).startsWith("w6")&&isDoneOn(day,i))) n++; return n;}
+const nTotal=day=>core(day).length+(isW6(day)&&itemsOf(day).length?1:0);
+const complete=day=>nTotal(day)>0&&nDone(day)>=nTotal(day);
 function streakUpTo(idx){let s=0;for(let i=idx;i>=0;i--){if(complete(DAYS[i]))s++;else break;}return s;}
 
 function flower(size,state){
@@ -370,6 +485,14 @@ function flower(size,state){
     ? '<g fill="#F7A8BA"><circle cx="20" cy="6" r="6"/><circle cx="30" cy="10" r="6"/><circle cx="34" cy="20" r="6"/><circle cx="30" cy="30" r="6"/><circle cx="20" cy="34" r="6"/><circle cx="10" cy="30" r="6"/><circle cx="6" cy="20" r="6"/><circle cx="10" cy="10" r="6"/></g><circle cx="20" cy="20" r="12" fill="#E8607F"/><path d="M14.5 20.5l4 4 7-8" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>'
     : '<g fill="none" stroke="#B48AA2" stroke-width="1.4" stroke-dasharray="2 2"><circle cx="20" cy="6" r="6"/><circle cx="30" cy="10" r="6"/><circle cx="34" cy="20" r="6"/><circle cx="30" cy="30" r="6"/><circle cx="20" cy="34" r="6"/><circle cx="10" cy="30" r="6"/><circle cx="6" cy="20" r="6"/><circle cx="10" cy="10" r="6"/></g><circle cx="20" cy="20" r="11" fill="#5E3B54"/>';
   return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 40 40" aria-hidden="true">'+pet+'</svg>';
+}
+const md=d=>DAYS[d].m+"/"+DAYS[d].day;
+
+// ---------- pace ----------
+function paceRisk(){
+  const p=prog(); const risks=[];
+  Object.keys(Q).forEach(q=>{ const f=FINISH[q]; if(p[q]<Q[q].units.length && (f===undefined||f>Q[q].deadline)) risks.push(q); });
+  return risks;
 }
 
 // ---------- render ----------
@@ -379,99 +502,135 @@ function renderTop(){
   const exam=new Date(2026,11,19); const now=new Date(); now.setHours(0,0,0,0);
   const left=Math.round((exam-now)/86400000);
   $("left").innerHTML = left>0? left+"<i>days</i>" : left===0? "当日" : "完走";
-  let msg="今日からスタート！";
-  if(todayIdx>0){
-    const y=DAYS[todayIdx-1]; const st=streakUpTo(todayIdx-1);
+  let msg="今日もいこう！"; const el=$("cheer"); el.classList.remove("warn");
+  const risks=paceRisk();
+  if(todayIdx>=0&&complete(DAYS[todayIdx])) msg="今日のはなまる、もらったよ！";
+  else if(risks.length){ msg="このペースだと"+risks.map(q=>Q[q].short).join("・")+"が遅れそう → 下の「もっとやる」で取り戻せるよ"; el.classList.add("warn"); }
+  else if(todayIdx>0){
+    const st=streakUpTo(todayIdx-1);
     if(a.d===61) msg="本番！いままでの全部が味方だよ";
     else if(a.d===60) msg="前日は見直しだけ。早く寝よう";
     else if(st>=3) msg=st+"日連続はなまる！その調子";
-    else if(complete(y)) msg=a.light? "きのうもはなまる。今日はゆる日でOK" : "きのうもはなまる。今日もいこう！";
-    else msg=a.light? "今日はゆる日。10分だけでもOK" : "今日からまた積み上げよう";
+    else if(complete(DAYS[todayIdx-1])) msg=a.light? "きのうもはなまる。今日はゆる日でOK" : "きのうもはなまる。今日もいこう！";
+    else msg=a.light? "今日はゆる日。10分だけでもOK" : "このペースなら間に合うよ。今日の分だけやろう";
   }
-  if(todayIdx>=0&&complete(DAYS[todayIdx])) msg="今日のはなまる、もらったよ！";
-  $("cheer").textContent=msg;
+  el.textContent=msg;
 }
 
 function renderKenya(){
   const el=$("kenya");
-  if(isOwner!==false||todayIdx<0){el.hidden=true;return;}
-  const t=DAYS[todayIdx];
-  el.hidden=false;
-  el.innerHTML = complete(t)
-    ? flower(24,"on")+'<span>けにゃへ：くーちゃん、今日のはなまる達成！</span>'
-    : '<span>けにゃへ：くーちゃんは今日 '+nDone(t)+' / '+nTotal(t)+' までがんばり中</span>';
+  if(isOwner||todayIdx<0){el.hidden=true;return;}
+  const t=DAYS[todayIdx]; el.hidden=false;
+  el.innerHTML = complete(t)? flower(24,"on")+'<span>けにゃへ：くーちゃん、今日のはなまる達成！</span>' : '<span>けにゃへ：くーちゃんは今日 '+nDone(t)+' / '+nTotal(t)+' までがんばり中</span>';
 }
 
 function renderStrip(){
   const ds=DAYS.filter(x=>x.week===selWeek);
-  const wd=ds.filter(complete).length;
-  $("wkinfo").textContent="Week "+(selWeek+1)+" ・ "+wd+" / "+ds.length;
+  $("wkinfo").textContent="Week "+(selWeek+1)+" ・ "+ds.filter(complete).length+" / "+ds.length;
   $("prev").disabled=selWeek===0; $("next").disabled=selWeek===8;
   $("strip").innerHTML=ds.map(day=>{
-    const idx=DAYS.indexOf(day); const c=complete(day);
-    let inner;
+    const idx=day.d; const c=complete(day); let inner;
     if(c) inner='<span class="'+(popKey===day.key?'pop':'')+'" style="display:flex">'+flower(36,"on")+'</span>';
     else if(idx===anchorIdx&&todayIdx>=0) inner='<span class="dot now"><b>'+day.day+'</b><small>'+nDone(day)+'/'+nTotal(day)+'</small></span>';
-    else if(idx<anchorIdx) inner='<span class="dot past"><b>'+day.day+'</b><small>'+(MOVED[day.d]?'振替':nDone(day)+'/'+nTotal(day))+'</small></span>';
+    else if(idx<anchorIdx){
+      let lab = nDone(day)+'/'+nTotal(day);
+      if(idx<NEW_FROM&&MOVED[idx]) lab='振替';
+      else if(idx>=NEW_FROM&&!S.snap[day.key]) lab='おやすみ';
+      inner='<span class="dot past"><b>'+day.day+'</b><small>'+lab+'</small></span>';
+    }
     else inner='<span class="dot fut"><b>'+day.day+'</b>'+(day.d===61?'<small>本番</small>':day.light?'<small>ゆる</small>':'')+'</span>';
-    return '<button type="button" class="dbtn'+(idx===selIdx?' sel':'')+'" data-i="'+idx+'" aria-label="'+day.m+'月'+day.day+'日 '+nDone(day)+'/'+nTotal(day)+'"><span class="dw">'+DOW[day.dow]+'</span>'+inner+'</button>';
+    return '<button type="button" class="dbtn'+(idx===selIdx?' sel':'')+'" data-i="'+idx+'" aria-label="'+day.m+'月'+day.day+'日"><span class="dw">'+DOW[day.dow]+'</span>'+inner+'</button>';
   }).join("");
+}
+
+function labelOf(i){
+  if(i.q) return {vocab:"VOCAB",strat:"STRATEGY",gram:"GRAMMAR",deru:"GRAMMAR"}[i.cat]+" ・ "+Q[i.q].label;
+  if(i.id==="kinrev") return "VOCAB ・ 金フレ";
+  let lb=LABEL[i.cat]||"";
+  if(i.cat==="listen"){ if(i.id==="shadow") lb="LISTENING ・ 寝る前シャドーイング"; else if(i.id==="walk") lb="LISTENING ・ 移動中（任意）"; else if(i.id==="weekly") lb="LISTENING ・ 週1演習"; }
+  return lb;
 }
 
 function renderTasks(){
-  const day=DAYS[selIdx];
-  const isT=selIdx===todayIdx;
+  const day=DAYS[selIdx]; const isT=selIdx===todayIdx; const fut=isFuture(day);
   $("dtitle").textContent = isT? "今日のやること" : day.m+"/"+day.day+"（"+DOW[day.dow]+"）のやること";
   const tot=nTotal(day), n=nDone(day);
   $("segs").innerHTML=Array.from({length:tot},(_,i)=>'<i class="'+(i<n?'on':'')+'"></i>').join("");
+  const items=itemsOf(day);
   let note="";
-  if(day.light) note="ゆる日：時間がない日なので、これだけでOK";
+  if(day.light) note="ゆる日：これだけでOK";
   if(isW6(day)) note="強化メニューは5週目に決めた分野を1つだけ選んでチェック";
   if(day.d===6) note="模試は任意。やらない日はチェックしなくてOK";
   if(day.d===60) note="本番前日：見直しだけ。模試はやらない";
-  if(MOVED[day.d]&&!complete(day)) note="この日の残りは先の日に移しました。チェックしなくてOK";
-  if(day.d===12) note="組み直し初日：今夜はこれだけでOK";
+  if(day.d<NEW_FROM&&MOVED[day.d]&&!complete(day)) note="この日の残りは先の日に移しました。チェックしなくてOK";
+  if(day.d>=NEW_FROM&&!fut&&!S.snap[day.key]) note="この日はおやすみ。できなかった分は自動で繰り越されています";
+  if(fut&&day.d>=NEW_FROM) note="毎日予定どおり進んだ場合の見込みです（できなかった分は自動で後ろにずれます）";
+  if(isT&&items.some(i=>i.carried)) note="前の日の残りも入っています（繰り越し）";
   $("dnote").hidden=!note; $("dnote").textContent=note;
-  $("tasks").innerHTML=day.items.map(i=>{
-    const cid="c-"+day.key+"-"+i.id; const on=isDone(day.key,i.id);
-    let lb=LABEL[i.cat];
-    if(i.cat==="listen"){ if(i.id==="shadow") lb="LISTENING ・ 寝る前シャドーイング"; else if(i.id==="walk") lb="LISTENING ・ 移動中（任意）"; else if(i.id==="weekly") lb="LISTENING ・ 週1演習"; }
+  $("tasks").innerHTML=items.map(i=>{
+    const cid="c-"+day.key+"-"+String(i.id).replace(/[^a-z0-9]/gi,"_"); const on=isDoneOn(day,i);
     const main=i.t.replace(/^寝る前シャドーイング：/,"").replace(/^週1演習：/,"");
-    return '<li><label class="task '+CLS[i.cat]+(on?' done':'')+'" for="'+cid+'"><span class="tx"><span class="lb">'+lb+'</span><span class="mn">'+main+'</span>'+(i.sub?'<span class="sb">'+i.sub+'</span>':'')+'</span><input class="ck" type="checkbox" id="'+cid+'" data-k="'+day.key+'" data-i="'+i.id+'"'+(on?' checked':'')+(readOnly?' disabled':'')+'></label></li>';
-  }).join("");
+    let sub=i.sub||""; if(i.carried) sub=(sub?sub+" ・ ":"")+i.carried+"から繰り越し";
+    if(i.q&&!on&&!isT&&!fut&&S.qdone[i.q][i.u]) sub=(sub?sub+" ・ ":"")+"あとの日にやった";
+    else if(i.q&&!on&&!isT&&!fut) sub=(sub?sub+" ・ ":"")+"次の日に繰り越し";
+    const dis = readOnly||fut;
+    return '<li><label class="task '+(CLS[i.cat]||"gram")+(on?' done':'')+(fut?' fut':'')+'" for="'+cid+'"><span class="tx"><span class="lb">'+labelOf(i)+'</span><span class="mn">'+main+'</span>'+(sub?'<span class="sb">'+sub+'</span>':'')+'</span><input class="ck" type="checkbox" id="'+cid+'" data-k="'+day.key+'" data-id="'+i.id+'"'+(on?' checked':'')+(dis?' disabled':'')+'></label></li>';
+  }).join("") + (isT&&!readOnly? moreChips(day):"");
   const w=WEEK_GOALS[day.week];
   $("wtitle").textContent=(day.week+1)+"週目のテーマ：「"+w.t+"」";
   $("wgoals").innerHTML=w.g.map(x=>'<li>'+x+'</li>').join("");
+  renderPaceSheet();
 }
 
-function lineText(day){return "けにゃへ\nくーちゃん、"+day.m+"/"+day.day+"のTOEIC勉強ぜんぶ終わったよ！今日のはなまるもらった（"+streakUpTo(DAYS.indexOf(day))+"日連続）\n本番まであと"+(61-day.d)+"日"+(remote?"\n"+location.origin+location.pathname+"?kenya":"");}
+function moreChips(day){
+  if(day.d<NEW_FROM||NOQ[day.d]) return "";
+  const snap=S.snap[day.key]||[]; const p=prog();
+  const chips=Object.keys(Q).map(q=>{
+    let u=p[q]; while(snap.some(i=>i.q===q&&i.u===u)) u++;
+    if(u>=Q[q].units.length) return "";
+    return '<button type="button" class="chip" data-q="'+q+'" data-u="'+u+'">＋ '+Q[q].short+'</button>';
+  }).join("");
+  if(!chips) return "";
+  return '<li class="more-row"><span class="more-t">余裕があれば、もっとやる</span><span class="chips">'+chips+'</span></li>';
+}
+
+function renderPaceSheet(){
+  const p=prog();
+  $("pace").innerHTML=Object.keys(Q).map(q=>{
+    const tot=Q[q].units.length, f=FINISH[q];
+    let st;
+    if(p[q]>=tot) st='<span class="ok">完了！</span>';
+    else if(f===undefined) st='<span class="ng">本番までに終わらない見込み</span>';
+    else st=(f>Q[q].deadline?'<span class="ng">':'<span class="ok">')+'終わる見込み '+md(f)+'</span>（目安 '+md(Q[q].deadline)+'まで）';
+    const next = p[q]<tot? '<div class="nx">次：'+Q[q].units[p[q]]+'</div>' : '';
+    return '<li><b>'+Q[q].label+'</b> '+p[q]+' / '+tot+' ・ '+st+next+'</li>';
+  }).join("");
+}
+
+function lineText(day){return "けにゃへ\nくーちゃん、"+day.m+"/"+day.day+"のTOEIC勉強ぜんぶ終わったよ！今日のはなまるもらった（"+streakUpTo(day.d)+"日連続）\n本番まであと"+(61-day.d)+"日"+(remote?"\n"+location.origin+location.pathname+"?kenya":"");}
 
 function renderBar(){
-  const day=DAYS[selIdx]; const left=nTotal(day)-nDone(day);
-  const isT=selIdx===todayIdx;
+  const day=DAYS[selIdx]; const left=nTotal(day)-nDone(day); const isT=selIdx===todayIdx;
   let html;
   if(complete(day)){
-    const txt=lineText(day);
-    const showSend = isT && isOwner!==false;
+    const showSend = isT && isOwner;
     html='<div class="gt"><span class="g1">'+(isT?"今日のはなまる、ゲット！":day.m+"/"+day.day+" ははなまる")+'</span><span class="g2">'+(showSend?"けにゃに知らせよう":"よくがんばりました")+'</span>'+
-      (showSend?'<div class="acts"><a class="send" href="https://line.me/R/share?text='+encodeURIComponent(txt)+'" target="_blank" rel="noopener">LINEでけにゃに送る</a><button type="button" class="copy" id="copyBtn">文をコピー</button></div>':'')+
+      (showSend?'<div class="acts"><a class="send" href="https://line.me/R/share?text='+encodeURIComponent(lineText(day))+'" target="_blank" rel="noopener">LINEでけにゃに送る</a><button type="button" class="copy" id="copyBtn">文をコピー</button></div>':'')+
       '</div><span class="'+(popKey===day.key?'pop':'')+'" style="display:flex;flex:none">'+flower(40,"on")+'</span>';
+  } else if(isFuture(day)){
+    html='<div class="gt"><span class="g1">'+day.m+"/"+day.day+'の予定</span><span class="g2">その日になったら、ここに出てきます</span></div><span style="display:flex;flex:none">'+flower(40,"off")+'</span>';
   } else {
-    html='<div class="gt"><span class="g1">あと'+left+'つで'+(isT?"今日の":day.m+"/"+day.day+"の")+'はなまる</span><span class="g2">もらえたら、けにゃに知らせよう</span></div><span style="display:flex;flex:none">'+flower(40,"off")+'</span>';
+    html='<div class="gt"><span class="g1">あと'+left+'つで'+(isT?"今日の":day.m+"/"+day.day+"の")+'はなまる</span><span class="g2">できなかった分は、明日に繰り越されるよ</span></div><span style="display:flex;flex:none">'+flower(40,"off")+'</span>';
   }
   $("goalbar").innerHTML=html;
   const cb=$("copyBtn"); if(cb) cb.addEventListener("click",()=>{
-    const t=lineText(day);
-    try{navigator.clipboard.writeText(t).then(()=>{cb.textContent="コピーしました";},()=>{cb.textContent="コピーできませんでした";});}catch(e){cb.textContent="コピーできませんでした";}
+    try{navigator.clipboard.writeText(lineText(day)).then(()=>{cb.textContent="コピーしました";},()=>{cb.textContent="コピーできませんでした";});}catch(e){cb.textContent="コピーできませんでした";}
   });
 }
 
-function renderMode(){
-  $("mode").textContent = KENYA? "けにゃ用の見るだけページ" : mode==="db"? "自動で保存・けにゃのページにも反映" : "この端末に保存中";
-}
+function renderMode(){ $("mode").textContent = KENYA? "けにゃ用の見るだけページ" : remote? "自動で保存・けにゃのページにも反映" : "この端末に保存中"; }
 
-
-function renderAll(){renderTop();renderKenya();renderStrip();renderTasks();renderBar();renderMode();popKey=null;}
+function renderAll(){ FINISH=computePreview(); renderTop();renderKenya();renderStrip();renderTasks();renderBar();renderMode();popKey=null; }
 
 // ---------- celebration ----------
 let celeTimer=null;
@@ -529,6 +688,8 @@ function confetti(cv){
     if(alive&&document.body.contains(cv)) celeTimer=requestAnimationFrame(tick); else celeTimer=null;
   })();
 }
+
+
 // ---------- events ----------
 $("infoBtn").addEventListener("click",()=>{$("sheet").hidden=false;$("closeBtn").focus();});
 $("closeBtn").addEventListener("click",()=>{$("sheet").hidden=true;$("infoBtn").focus();});
@@ -536,43 +697,50 @@ $("sheet").addEventListener("click",e=>{if(e.target.id==="sheet"){$("sheet").hid
 $("prev").addEventListener("click",()=>{if(selWeek>0){selWeek--;renderStrip();}});
 $("next").addEventListener("click",()=>{if(selWeek<8){selWeek++;renderStrip();}});
 $("strip").addEventListener("click",e=>{const b=e.target.closest(".dbtn");if(!b)return;selIdx=+b.dataset.i;renderStrip();renderTasks();renderBar();});
+$("tasks").addEventListener("click",e=>{
+  const c=e.target.closest(".chip"); if(!c||readOnly) return;
+  const q=c.dataset.q,u=+c.dataset.u; const snap=S.snap[todayKey]; if(!snap) return;
+  const pos = snap.findIndex(i=>i.id==="read"||i.id==="shadow"||i.id==="walk"||i.id==="weekly");
+  const it={id:"q:"+q+":"+u,q,u,cat:Q[q].cat,t:Q[q].units[u],sub:"もっとやる"};
+  if(pos<0) snap.push(it); else snap.splice(pos,0,it);
+  persist(); renderAll();
+});
 $("tasks").addEventListener("change",e=>{
   const t=e.target; if(!t.matches(".ck")||readOnly) return;
-  const k=t.dataset.k,id=t.dataset.i; const day=DAYS.find(x=>x.key===k);
+  const k=t.dataset.k, id=t.dataset.id; const day=DAYS.find(x=>x.key===k);
+  const it=itemsOf(day).find(i=>String(i.id)===id); if(!it) return;
   const before=complete(day);
-  done[k]=Object.assign({},done[k]); if(t.checked) done[k][id]=true; else delete done[k][id];
-  persistLocal();
+  if(day.d<NEW_FROM){ S.old[k]=Object.assign({},S.old[k]); if(t.checked) S.old[k][id]=true; else delete S.old[k][id]; try{localStorage.setItem(LS_OLD,JSON.stringify(S.old));}catch(e){} }
+  else if(it.q){ if(t.checked) S.qdone[it.q][it.u]=k; else delete S.qdone[it.q][it.u]; }
+  else { S.ddone[k]=Object.assign({},S.ddone[k]); if(t.checked) S.ddone[k][id]=true; else delete S.ddone[k][id]; }
+  persist();
   const after=complete(day);
   if(!before&&after) popKey=k;
   renderAll();
   if(!before&&after) celebrate(day);
-  save(k);
 });
 
-// ---------- storage ----------
+// ---------- storage (Supabase：任意) ----------
 async function sb(path,opts){opts=opts||{};
   const r=await fetch(CFG.SUPABASE_URL.replace(/\/$/,"")+"/rest/v1/"+path,Object.assign({},opts,{headers:Object.assign({apikey:CFG.SUPABASE_KEY,Authorization:"Bearer "+CFG.SUPABASE_KEY,"Content-Type":"application/json"},opts.headers||{})}));
   if(!r.ok) throw new Error("HTTP "+r.status); return r.status===204||r.status===201?null:r.json();}
-const writing={},pending={};
-function save(k){ if(!remote||KENYA) return; pending[k]=true; if(writing[k]) return; writing[k]=true;
-  (async()=>{ while(pending[k]){ pending[k]=false;
-      try{ await sb("progress",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({day:k,done:done[k]||{},updated_at:new Date().toISOString()})}); }
-      catch(e){ await new Promise(r=>setTimeout(r,3000)); pending[k]=true; if(!navigator.onLine) break; } }
-    writing[k]=false; })();
-}
+let saveTimer=null;
+function save(){ if(!remote||KENYA) return; clearTimeout(saveTimer); saveTimer=setTimeout(()=>{
+  sb("progress",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({day:"__state__",done:S,updated_at:new Date().toISOString()})}).catch(()=>{});
+},600); }
 async function pull(){ if(!remote) return;
-  try{ const rows=await sb("progress?select=day,done"); const next={};
-    (rows||[]).forEach(r=>{ if(r&&r.done) next[r.day]=r.done; });
-    if(!KENYA) Object.keys(done).forEach(k=>{ if(!next[k]&&Object.keys(done[k]||{}).length){ next[k]=done[k]; save(k);} });
-    done=next; if(!KENYA) persistLocal(); renderAll();
+  try{ const rows=await sb("progress?select=day,done&day=eq.__state__"); const r=(rows||[])[0];
+    if(r&&r.done&&r.done.qdone){ if(KENYA) S=r.done; else { S=Object.assign(S,r.done); try{localStorage.setItem(LS,JSON.stringify(S));}catch(e){} } renderAll(); }
+    else if(!KENYA) save();
   }catch(e){} }
 
+ensureToday();
 renderAll();
 pull();
 if(KENYA) setInterval(pull,60000);
-document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") pull(); });
-window.addEventListener("online",()=>{ Object.keys(done).forEach(save); });
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ if(fmt(new Date())!==todayKey) location.reload(); else pull(); } });
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+
 })();
 </script>
 </body>
